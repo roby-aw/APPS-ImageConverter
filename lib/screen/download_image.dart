@@ -5,6 +5,7 @@ import 'dart:convert';
 
 import 'package:apps_imageconverter/network/convert.dart';
 import 'package:apps_imageconverter/screen/success.dart';
+import 'package:apps_imageconverter/screen/splash_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -19,12 +20,22 @@ class DownloadImage extends StatefulWidget {
       _DownloadImageState(reqConvert: reqConvert);
 }
 
+Future<dynamic> sendConverts(
+    ReqConvert reqConvert, BuildContext context) async {
+  return sendConvert(reqConvert, context);
+}
+
 class _DownloadImageState extends State<DownloadImage> {
   ReqConvert reqConvert;
   bool _isLoading = false;
   _DownloadImageState({Key? key, required this.reqConvert});
 
-  @override
+  dynamic result;
+  void initState() {
+    super.initState();
+    result = sendConverts(reqConvert, context);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,7 +45,7 @@ class _DownloadImageState extends State<DownloadImage> {
         ),
         // Page Download
         body: FutureBuilder<dynamic>(
-            future: sendConvert(reqConvert, context),
+            future: result,
             builder: (context, snapshot) {
               if (_isLoading) {
                 return Center(
@@ -89,7 +100,6 @@ _getHttp(String filename, String img, BuildContext context) async {
     if (permission) {
       var directory = await getExternalStorageDirectory();
       String newPath = "";
-      print(directory);
       String convertedDirectoryPath = (directory?.path).toString();
       List<String> paths = convertedDirectoryPath.split("/");
       for (int x = 1; x < convertedDirectoryPath.length; x++) {
@@ -102,7 +112,6 @@ _getHttp(String filename, String img, BuildContext context) async {
       }
       path = newPath;
     } else {
-      print("permssion denied");
       Navigator.of(context).pop();
       Fluttertoast.showToast(msg: "Please give neccesary permissions");
       return false;
@@ -152,7 +161,6 @@ Future<bool> requestPermission() async {
 }
 
 getImageByID(String id, BuildContext context) async {
-  print("Get Image By ID");
   var prefs = await SharedPreferences.getInstance();
   var token = prefs.getString('token')!;
   var url = Uri.parse(
@@ -163,9 +171,10 @@ getImageByID(String id, BuildContext context) async {
   });
 
   if (response.statusCode == 200) {
-    var data = jsonDecode(response.body);
-    return data;
+    return jsonDecode(response.body);
   } else {
-    print('Request failed with status: ${response.statusCode}.');
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) {
+      return SPlashScreen();
+    }));
   }
 }

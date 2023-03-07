@@ -23,12 +23,10 @@ class _SPlashScreenState extends State<SPlashScreen> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
     if (token != null) {
-      print(token);
       getToken();
       Navigator.pushReplacement(
           context, MaterialPageRoute(builder: (context) => Home()));
     } else {
-      print(token);
       getToken();
       Navigator.pushReplacement(
           context, MaterialPageRoute(builder: (context) => Home()));

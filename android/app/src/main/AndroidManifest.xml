@@ -1,12 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.werk.imgconvert.apps_imageconverter">
+    <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
    <application
         android:requestLegacyExternalStorage="true"
-        android:label="apps_imageconverter"
+        android:label="Simple Image Converter"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

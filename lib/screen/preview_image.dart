@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:apps_imageconverter/screen/download_image.dart';
 import 'package:apps_imageconverter/network/convert.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'dart:async';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class PreviewImage extends StatefulWidget {
   XFile? image;
@@ -17,6 +20,57 @@ const List<String> list = <String>['png', 'jpg', 'webp'];
 class _PreviewImageState extends State<PreviewImage> {
   double _currentSliderValue = 20;
   String dropdownValue = list.first;
+
+  ConnectivityResult _connectionStatus = ConnectivityResult.none;
+  final Connectivity _connectivity = Connectivity();
+  late StreamSubscription<ConnectivityResult> _connectivitySubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    initConnectivity();
+
+    _connectivitySubscription =
+        _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
+  }
+
+  @override
+  void dispose() {
+    _connectivitySubscription.cancel();
+    super.dispose();
+  }
+
+  Future<void> initConnectivity() async {
+    late ConnectivityResult result;
+    // Platform messages may fail, so we use a try/catch PlatformException.
+
+    result = await _connectivity.checkConnectivity();
+
+    // If the widget was removed from the tree while the asynchronous platform
+    // message was in flight, we want to discard the reply rather than calling
+    // setState to update our non-existent appearance.
+    if (!mounted) {
+      return Future.value(null);
+    }
+
+    return _updateConnectionStatus(result);
+  }
+
+  Future<void> _updateConnectionStatus(ConnectivityResult result) async {
+    setState(() {
+      _connectionStatus = result;
+      if (_connectionStatus == ConnectivityResult.none) {
+        Fluttertoast.showToast(
+            msg: "Please Check Your Connection",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 1,
+            backgroundColor: Colors.red,
+            textColor: Colors.white,
+            fontSize: 16.0);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -100,9 +154,20 @@ class _PreviewImageState extends State<PreviewImage> {
                               backgroundColor: MaterialStateProperty.all<Color>(
                                   Colors.redAccent)),
                           onPressed: () async {
+                            if (_connectionStatus == ConnectivityResult.none) {
+                              Fluttertoast.showToast(
+                                  msg: "Please Check Your Connection",
+                                  toastLength: Toast.LENGTH_SHORT,
+                                  gravity: ToastGravity.BOTTOM,
+                                  timeInSecForIosWeb: 1,
+                                  backgroundColor: Colors.red,
+                                  textColor: Colors.white,
+                                  fontSize: 16.0);
+                              return;
+                            }
                             var reqConvert = ReqConvert(
-                                Type: dropdownValue,
-                                Quality: _currentSliderValue.round(),
+                                type: dropdownValue,
+                                quality: _currentSliderValue.round(),
                                 img: File(widget.image!.path));
                             Navigator.push(
                               context,
@@ -122,26 +187,6 @@ class _PreviewImageState extends State<PreviewImage> {
                     )),
               ]),
             )
-
-            // Align(
-            //   alignment: Alignment.topLeft,
-            //   child: Card(
-            //     elevation: 5,
-            //     child: Container(
-            //       padding: EdgeInsets.all(8),
-            //       child: _buildTitleSection(
-            //           title: 'Image Preview', subTitle: 'Image'),
-            //     ),
-            //   ),
-            // ),
-            // Align(
-            //   alignment: Alignment.topCenter,
-            //   child: Expanded(
-            //     child: Container(
-            //       child: Image.file(File(widget.image!.path)),
-            //     ),
-            //   ),
-            // ),
           ],
         ));
   }
